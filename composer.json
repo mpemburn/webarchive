@@ -11,11 +11,16 @@
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "livewire/livewire": "^3.0",
-        "livewire/volt": "^1.0"
+        "livewire/volt": "^1.0",
+        "spatie/crawler": "^8.0",
+        "ext-dom": "*",
+        "ext-curl": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
+        "kint-php/kint": "^5.1",
         "laravel/breeze": "^1.26",
+        "laravel/dusk": "^7.12",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
