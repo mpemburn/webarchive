@@ -12,7 +12,7 @@ class CrawlAndShoot extends Command
      *
      * @var string
      */
-    protected $signature = 'web:crawl {--screenshot=}';
+    protected $signature = 'web:crawl {--url=} {--screenshot=}';
     protected $saveAsScreenshots = true;
     /**
      * The console command description.
@@ -26,13 +26,14 @@ class CrawlAndShoot extends Command
      */
     public function handle()
     {
-//        $url = 'https://www2.clarku.edu/difficultdialogues';
-        $url = 'https://www2.clarku.edu/research/kaspersonlibrary/mtafund';
+        $url = $this->option('url') ?? null;
 
         $this->saveAsScreenshots = (bool)$this->option('screenshot')
             ? $this->option('screenshot')
             : true;
 
-        (new WebCrawlerService())->crawl($url, $this->saveAsScreenshots);
+        if ($url) {
+            (new WebCrawlerService())->crawl($url, $this->saveAsScreenshots);
+        }
     }
 }
