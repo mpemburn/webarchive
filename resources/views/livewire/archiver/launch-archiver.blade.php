@@ -63,19 +63,20 @@ new class extends Component {
     {
         //Artisan::call('web:crawl', ['--url' => $this->url]);
 
-        $this->notify('archive-updated');
+        $this->notify('Begin');
     }
 
 }; ?>
 
 <section>
+    <x-notifications />
     <header>
         <h2 class="text-lg font-medium text-gray-900">
             {{ __('Website Archiver') }}
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-            {{ __("Choose a Category, then select a URL.") }}
+            {{ __("Choose a Category, then select a website.") }}
         </p>
     </header>
 
@@ -94,7 +95,7 @@ new class extends Component {
         <div>
             <x-input-label for="websites" :value="__('Websites')"/>
             <select wire:model.change="url">
-                <option value="" selected>Select URL</option>
+                <option value="" selected>Select Website</option>
                 @foreach($websites as $url)
                     <option value="{{ $url->web_root }}">
                         {{ $url->page_title }}
