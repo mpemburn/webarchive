@@ -39,12 +39,15 @@ class BrowserScreenShotService
 
     public function screenshot(string $url, string $title): bool
     {
-        echo 'Creating screenshot for: ' . $url . PHP_EOL;
-        if (Curl::isRedirected($url)) {
-            echo 'Screenshot failed for: ' . $url . PHP_EOL;
+        $filename = str_replace(' ', '', $title) . '.png';
+        $filePath = Storage::path($this->saveDirectory . '/screenshots/') . '/' . $filename;
 
-            return false;
+        // If we've created the file already, no need to redo
+        if (file_exists($filePath)) {
+            return true;
         }
+
+        echo 'Creating screenshot for: ' . $url . PHP_EOL;
 
         try {
             //Start by setting your full desired width and an arbitrary height
@@ -72,10 +75,7 @@ class BrowserScreenShotService
 
             $image = $this->browser->driver->TakeScreenshot(); //$image is now the image data in PNG format
 
-            //save the image somewhere useful
-            $filename = str_replace(' ', '', $title) . '.png';
-            $filePath = Storage::path('/screenshots/' . $this->saveDirectory) . '/' . $filename;
-
+            //Save the image
             Storage::disk('local')->put($this->saveDirectory . '/screenshots/' . $filename, $image);
 
             return file_exists($filePath);

@@ -2,11 +2,14 @@
 
 namespace App\Observers;
 
+use App\Facades\Curl;
 use App\Services\BrowserScreenShotService;
+use App\Services\DocumentService;
 use App\Services\DownloadService;
 use App\Services\SaveToHtmlService;
 use DOMDocument;
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Collection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\UriInterface;
 use Spatie\Crawler\CrawlObservers\CrawlObserver;
@@ -15,25 +18,32 @@ class WebObserver extends CrawlObserver
 {
     protected string $baseUrl;
     protected string $rootUrl;
+    protected string $saveDirectory;
     protected bool $saveAsScreenshots;
     protected bool $echo;
+    protected Collection $titles;
 
     protected BrowserScreenShotService $screenshotService;
+    protected DocumentService $document;
+    protected DownloadService $download;
     protected SaveToHtmlService $htmlService;
 
     public function __construct(string $baseUrl, bool $saveAsScreenshots = true, $echo = true)
     {
+        $this->document = new DocumentService();
+        $this->download = new DownloadService();
         $this->baseUrl = $baseUrl;
-        $this->rootUrl = $this->getRootUrl($baseUrl);
+        $this->rootUrl = $this->document->getRootUrl($baseUrl);
         $this->saveAsScreenshots = $saveAsScreenshots;
         $this->echo = $echo;
-        $saveDirectory = $this->makeSaveDirectory($baseUrl);
+        $this->titles = collect();
+        $this->saveDirectory = $this->makeSaveDirectory($baseUrl);
 
         if ($saveAsScreenshots) {
-            $this->screenshotService = new BrowserScreenShotService($saveDirectory);
+            $this->screenshotService = new BrowserScreenShotService($this->saveDirectory);
         }
 
-        $this->htmlService = new SaveToHtmlService($this->rootUrl, $saveDirectory);
+        $this->htmlService = new SaveToHtmlService($this->rootUrl, $this->saveDirectory);
     }
 
     /**
@@ -47,6 +57,10 @@ class WebObserver extends CrawlObserver
         if ($this->echo) {
             echo 'Testing: ' . $url . PHP_EOL;
         }
+
+        // Download $url if it's a document
+        $ext = $this->document->getExtension($url);
+        $this->download->downloadDocument($url, $ext, $this->saveDirectory);
     }
 
     /**
@@ -63,45 +77,21 @@ class WebObserver extends CrawlObserver
         ?UriInterface     $foundOnUrl = null,
         ?string           $linkText = null): void
     {
-        if (!$linkText || stripos($url, $this->baseUrl) === false) {
-            //return;
-        }
-
-        echo "Crawling... " . PHP_EOL;
-
-        $saveDirectory = $this->makeSaveDirectory($this->baseUrl);
-
-        $urlParts = explode('.', $url);
-        $ext = strtolower(end($urlParts));
-
-        if (in_array($ext, DownloadService::VALID_FILE_EXTENSIONS)) {
-            echo "Downloading .{$ext} :" . $url . PHP_EOL;
-            // Download .pdf
-            (new DownloadService($saveDirectory))->save($url);
-
+        // Make sure that this isn't an external URL
+        if (stripos($url, $this->rootUrl) === false) {
             return;
-        }
-
-        if ($this->echo) {
-            echo 'Title: ' . $linkText . PHP_EOL;
-            echo 'Scanning: ' . $url . PHP_EOL;
-        }
-
-        if ($this->saveAsScreenshots && $url && $linkText)  {
-            (new BrowserScreenShotService($saveDirectory))->screenshot($url, $linkText);
         }
 
         $doc = new DOMDocument();
         $body = $response->getBody();
-
-        if (strlen($body) < 1) {
-            return;
-        }
-
         @$doc->loadHTML($body);
-        //# save HTML
         $content = $doc->saveHTML();
-        $this->htmlService->makeHtml($linkText, $content);
+        $ext = $this->document->getExtension($url);
+        $title = $this->document->getDocumentTitle($body, $url, $this->titles);
+
+        echo "Crawling... " . PHP_EOL;
+
+        $this->process($url, $content, $title, $ext);
     }
 
     /**
@@ -113,9 +103,29 @@ class WebObserver extends CrawlObserver
      * @param string|null $linkText
      */
     public function crawlFailed(
-        UriInterface $url, RequestException $requestException, ?UriInterface $foundOnUrl = null, ?string $linkText = null): void
+        UriInterface $url,
+        RequestException $requestException,
+        ?UriInterface $foundOnUrl = null,
+        ?string $linkText = null): void
     {
-        //echo 'crawlFailed: ' . $url . PHP_EOL;
+        $newUrl = $url;
+
+        if (! Curl::testUrl($url)) {
+            $newUrl = $this->baseUrl . '/' . $this->document->getPageName($url);
+        }
+
+        echo 'Crawl failed. Retrying with: ' . $newUrl . PHP_EOL;
+
+        if (! Curl::testUrl($newUrl)) {
+            echo $newUrl . ' not found.' . PHP_EOL;
+            return;
+        }
+
+        $content = file_get_contents($newUrl);
+        $ext = $this->document->getExtension($newUrl);
+        $title = $this->document->getDocumentTitle($content, $newUrl, $this->titles);
+
+        $this->process($newUrl, $content, $title, $ext);
     }
 
     /**
@@ -123,13 +133,6 @@ class WebObserver extends CrawlObserver
      */
     public function finishedCrawling(): void
     {
-    }
-
-    protected function getRootUrl(string $baseUrl): string
-    {
-        $parsed = parse_url($baseUrl);
-
-        return $parsed['scheme'] . '://' . $parsed['host'];
     }
 
     protected function makeSaveDirectory(string $url): string
@@ -142,5 +145,27 @@ class WebObserver extends CrawlObserver
         }
 
         return str_replace('.', '_', $parsed['host']);
+    }
+
+    protected function process(string $url, string $content, string $title, string $ext): void
+    {
+        if ($this->download->downloadDocument($url, $ext, $this->saveDirectory)) {
+            return;
+        }
+
+        if ($this->echo) {
+            echo 'Title: ' . $title . PHP_EOL;
+            echo 'Scanning: ' . $url . PHP_EOL;
+        }
+
+        if ($this->saveAsScreenshots && $url && $title) {
+            (new BrowserScreenShotService($this->saveDirectory))->screenshot($url, $title);
+        }
+
+        if (strlen($content) < 1) {
+            return;
+        }
+
+        $this->htmlService->makeHtml($title, $content);
     }
 }

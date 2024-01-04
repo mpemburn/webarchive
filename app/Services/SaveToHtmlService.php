@@ -15,19 +15,22 @@ class SaveToHtmlService
         $this->saveDirectory = trim($saveDirectory);
     }
 
-    public function makeHtml(?string $title, string $content)
+    public function makeHtml(?string $title, string $content): void
     {
         $page = $title
-            ? strtolower(preg_replace('/[^\w]+/', '_', $title)) . '.html'
+            ? preg_replace('/[^\w]+/', '_', $title) . '.html'
             : 'Untitled.html';
 
         if (str_starts_with($page, '_')) {
             $page = substr($page, 1);
         }
 
-        $html = $this->saveDirectory . '/'. $page;
+        $filePath = $this->saveDirectory . '/'. $page;
 
-        Storage::put($html, $content);
+        if (file_exists($filePath)) {
+            return;
+        }
 
+        Storage::put($filePath, $content);
     }
 }

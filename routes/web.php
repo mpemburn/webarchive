@@ -1,5 +1,6 @@
 <?php
 
+use App\Facades\Curl;
 use App\Facades\Database;
 use App\Models\WebArchiveTest;
 use Illuminate\Support\Facades\Route;
@@ -16,10 +17,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/dev', function () {
-    $url = 'https://www2.clarku.edu/faculty/fgreen/courses/index.html';
-
-    !d(pathinfo(parse_url($url)['path']));
-
+//    $url = 'http://www2.clarku.edu/faculty/dhibbett/AFTOL/documents/Nature%20Res%20Highlights%20Jun%2028%2007.pdf';
+    $url = 'http://www.clarku.edu/faculty/dhibbett/Protocols_Folder/Lab_protocols.pdf';
+    !d(Curl::testUrl($url));
     // Do what thou wilt
 });
 

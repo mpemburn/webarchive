@@ -61,9 +61,9 @@ new class extends Component {
      */
     public function launchArchiveProcess(): void
     {
-        Artisan::call('web:crawl', ['--url' => $this->url]);
+        //Artisan::call('web:crawl', ['--url' => $this->url]);
 
-        $this->dispatch('archive-updated');
+        $this->notify('archive-updated');
     }
 
 }; ?>
@@ -109,10 +109,6 @@ new class extends Component {
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Archive') }}</x-primary-button>
-
-            <x-action-message class="me-3" on="archive-updated">
-                {{ $message }}
-            </x-action-message>
         </div>
     </form>
 </section>

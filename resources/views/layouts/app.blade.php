@@ -29,8 +29,10 @@
 
             <!-- Page Content -->
             <main>
+                <x-notifications />
                 {{ $slot }}
             </main>
         </div>
+        <livewire:scripts />
     </body>
 </html>
