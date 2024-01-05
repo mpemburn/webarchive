@@ -32,6 +32,5 @@
                 {{ $slot }}
             </main>
         </div>
-        <livewire:scripts />
     </body>
 </html>

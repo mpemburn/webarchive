@@ -32,7 +32,7 @@ new class extends Component {
             ->get();
     }
 
-    protected function getWebsites(string $category)
+    protected function getWebsites(string $category): Collection
     {
         return WebArchiveTest::query()
             ->select(['web_root', 'page_title'])
@@ -84,7 +84,7 @@ new class extends Component {
         <div>
             <x-input-label for="categories" :value="__('Categories')"/>
             <select wire:model.change="category" class="form-control">
-                <option value="" selected>Select category</option>
+                <option value="" selected>Select Category</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->category }}">
                         {{ ucfirst($category->category) }}
