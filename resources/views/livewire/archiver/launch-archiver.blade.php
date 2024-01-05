@@ -4,6 +4,8 @@ use App\Models\WebArchiveTest;
 use Illuminate\Support\Collection;
 use Livewire\Volt\Component;
 use Illuminate\Support\Facades\Artisan;
+use App\Events\WebEntityProcessed;
+use Illuminate\Support\Facades\Log;
 
 new class extends Component {
     public Collection $categories;
@@ -12,6 +14,7 @@ new class extends Component {
     public string $url = '';
     public string $selectedUrl = '';
     public string $message = '';
+    protected $listeners = ['echo:new-entity,WebEntityProcessed' => 'notifyNewEntity'];
 
     /**
      * Mount the component.
@@ -61,9 +64,17 @@ new class extends Component {
      */
     public function launchArchiveProcess(): void
     {
-        //Artisan::call('web:crawl', ['--url' => $this->url]);
 
-        $this->notify('Begin');
+        //Artisan::call('web:crawl', ['--url' => $this->url]);
+        Log::debug('Sending...');
+
+        event(new WebEntityProcessed);
+    }
+
+    public function notifyNewEntity()
+    {
+        Log::debug('Where are you?');
+        $this->notify('You got it!');
     }
 
 }; ?>
