@@ -31,7 +31,7 @@ class WebObserver extends CrawlObserver
     public function __construct(string $baseUrl, bool $saveAsScreenshots = true, $echo = true)
     {
         $this->document = new DocumentService();
-        $this->download = new DownloadService();
+        $this->download = new DownloadService($baseUrl);
         $this->baseUrl = $baseUrl;
         $this->rootUrl = $this->document->getRootUrl($baseUrl);
         $this->saveAsScreenshots = $saveAsScreenshots;
@@ -84,6 +84,10 @@ class WebObserver extends CrawlObserver
 
         $doc = new DOMDocument();
         $body = $response->getBody();
+        if (strlen($body) === 0) {
+            return;
+        }
+
         @$doc->loadHTML($body);
         $content = $doc->saveHTML();
         $ext = $this->document->getExtension($url);

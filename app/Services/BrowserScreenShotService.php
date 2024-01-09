@@ -14,6 +14,8 @@ use Facebook\WebDriver\WebDriverDimension;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Dusk\Browser;
 use Laravel\Dusk\Chrome\ChromeProcess;
+use Symfony\Component\Process\Exception\RuntimeException;
+use Facebook\WebDriver\Exception\UnknownErrorException;
 
 class BrowserScreenShotService
 {
@@ -24,17 +26,22 @@ class BrowserScreenShotService
     {
         $this->saveDirectory = trim($saveDirectory);
 
-        //Make a Chrome browser
-        $process = (new ChromeProcess)->toProcess();
-        $process->start();
-        $options = (new ChromeOptions)->addArguments(['--disable-gpu', '--headless']);
-        $capabilities = DesiredCapabilities::chrome()->setCapability(ChromeOptions::CAPABILITY, $options);
-        $driver = retry(5, function () use($capabilities) {
-            return RemoteWebDriver::create('http://localhost:9515', $capabilities);
-        }, 50);
+        try {
+            //Make a Chrome browser
+            $process = (new ChromeProcess)->toProcess();
+            $process->start();
+            $options = (new ChromeOptions)->addArguments(['--disable-gpu', '--headless']);
+            $capabilities = DesiredCapabilities::chrome()->setCapability(ChromeOptions::CAPABILITY, $options);
+            $driver = retry(5, function () use($capabilities) {
+                return RemoteWebDriver::create('http://localhost:9515', $capabilities);
+            }, 50);
 
-        $this->browser = new Browser($driver);
-
+            $this->browser = new Browser($driver);
+        } catch (RuntimeException $rune) {
+            echo 'RuntimeException: Failed to start a new screenshot process.' . PHP_EOL;
+        } catch (UnknownErrorException $unke) {
+            echo 'UnknownErrorException: Failed to start a new screenshot process.' . PHP_EOL;
+        }
     }
 
     public function screenshot(string $url, string $title): bool

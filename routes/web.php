@@ -17,9 +17,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/dev', function () {
-//    $url = 'http://www2.clarku.edu/faculty/dhibbett/AFTOL/documents/Nature%20Res%20Highlights%20Jun%2028%2007.pdf';
-    $url = 'http://www.clarku.edu/faculty/dhibbett/Protocols_Folder/Lab_protocols.pdf';
-    !d(Curl::testUrl($url));
     // Do what thou wilt
 });
 

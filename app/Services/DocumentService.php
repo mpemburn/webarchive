@@ -7,9 +7,12 @@ use Illuminate\Support\Collection;
 class DocumentService
 {
     const HTML_EXTENSIONS = [
+        '.asp',
         '.aspx',
+        '.cfm',
         '.html',
-        '.htm'
+        '.htm',
+        '.php',
     ];
 
     public function getRootUrl(string $baseUrl): string

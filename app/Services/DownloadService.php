@@ -45,10 +45,12 @@ class DownloadService
     ];
 
     protected string $saveDirectory;
+    protected string $baseUrl;
     protected Client $httpClient;
 
-    public function __construct()
+    public function __construct(string $baseUrl)
     {
+        $this->baseUrl = $baseUrl;
         $this->httpClient = new Client();
     }
     public function downloadDocument(string $url, string $ext, string $saveDirectory): bool
@@ -56,14 +58,16 @@ class DownloadService
         $this->saveDirectory = trim($saveDirectory);
         $filename = $this->getFilenameFromUrl($url);
 
-        if ($this->fileExists($filename)) {
+        if ($this->fileExists($filename) || ! str_contains($url, $this->baseUrl)) {
             return true;
         }
 
         if (in_array(strtolower($ext), self::VALID_FILE_EXTENSIONS)) {
             echo 'Preparing to download ' . $url . PHP_EOL;
+
             if (! Curl::testUrl($url)) {
                 echo 'Not found.'. PHP_EOL;
+
                 return false;
             }
             echo "Downloading .{$ext} :" . $url . PHP_EOL;
@@ -98,7 +102,7 @@ class DownloadService
 
     protected function getFilePath(string $filename): string
     {
-        return Storage::path('/documents/' . $this->saveDirectory) . '/' . $filename;
+        return Storage::path($this->saveDirectory . '/documents') . '/' . $filename;
     }
 
 
@@ -113,8 +117,9 @@ class DownloadService
         $parts = pathinfo($parsed['path']);
 
         $filename = urldecode($parts['filename']);
+        $dirname = str_replace(['//', $this->saveDirectory], ['/', ''], $parts['dirname']);
         $ext = $parts['extension'] ?? '';
 
-        return preg_replace('/[^\w]+/', '_', $filename) . '.' . $ext;
+        return $dirname . '/' . preg_replace('/[^\w]+/', '_', $filename) . '.' . $ext;
     }
 }
