@@ -20,6 +20,8 @@ import Echo from 'laravel-echo';
 // window.Pusher = require('pusher-js');
 import Pusher from "pusher-js";
 window.Pusher = Pusher;
+window.Pusher.logToConsole = true;
+
 window.Echo = new Echo({
     broadcaster: 'pusher',
     key: '8ed7cb09ce50f946100d',
@@ -27,24 +29,6 @@ window.Echo = new Echo({
     forceTLS: true
 });
 
-import Vue from 'vue'
-import VueEcho from "vue-echo-laravel";
-
-// Enable pusher logging - don't include this in production
-Pusher.logToConsole = true;
-
-Vue.use(VueEcho, {
-    broadcaster: "pusher",
-    key: "8ed7cb09ce50f946100d",
-    cluster: "ap2",
-    forceTLS: true,
-    authEndpoint: "/broadcasting/auth",
-    auth: {
-        headers: {
-            // authorization: token ? `Bearer ${token}` : null // Enabled - If you are using Bearer for authentication
-        }
-    }
-});
 // import Echo from 'laravel-echo';
 
 // import Pusher from 'pusher-js';

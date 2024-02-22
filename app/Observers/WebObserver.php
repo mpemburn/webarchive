@@ -38,6 +38,7 @@ class WebObserver extends CrawlObserver
         $this->echo = $echo;
         $this->titles = collect();
         $this->saveDirectory = $this->makeSaveDirectory($baseUrl);
+        echo 'Saving to: ' . $this->saveDirectory . PHP_EOL;
 
         if ($saveAsScreenshots) {
             $this->screenshotService = new BrowserScreenShotService($this->saveDirectory);

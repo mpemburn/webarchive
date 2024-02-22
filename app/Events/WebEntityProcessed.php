@@ -20,7 +20,7 @@ class WebEntityProcessed implements ShouldBroadcast
      */
     public function __construct()
     {
-        Log::debug('Hello?');
+        //Log::debug('Hello?');
     }
 
     /**
@@ -31,7 +31,7 @@ class WebEntityProcessed implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('new-entity'),
+            new Channel('new-entity'),
         ];
     }
 }

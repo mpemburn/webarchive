@@ -5,7 +5,6 @@
  */
 namespace App\Services;
 
-use App\Facades\Curl;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -19,6 +18,8 @@ use Facebook\WebDriver\Exception\UnknownErrorException;
 
 class BrowserScreenShotService
 {
+    const DEFAULT_BROWSER_WIDTH = 1920;
+
     protected $browser;
     protected string $saveDirectory;
 
@@ -54,35 +55,22 @@ class BrowserScreenShotService
             return true;
         }
 
-        echo 'Creating screenshot for: ' . $url . PHP_EOL;
+        $this->browser->visit($url);
 
         try {
-            //Start by setting your full desired width and an arbitrary height
-            $size = new WebDriverDimension(1920, 1080);
+            // Calculate screen height
+            $screenHeight = $this->getScreenHeight();
+
+            $this->browser->pause(1000);
+            // Set dimensions for screenshot
+            $size = new WebDriverDimension(self::DEFAULT_BROWSER_WIDTH, $screenHeight);
             $this->browser->driver->manage()->window()->setSize($size);
 
-            $this->browser->visit($url);
+            $this->browser->pause(3000);
 
-            //Resize to full height for a complete screenshot
-            $body = $this->browser->driver->findElement(WebDriverBy::tagName('body'));
-            if (!empty($body)) {
-                $currentSize = $body->getSize();
+            $image = $this->browser->driver->TakeScreenshot();
 
-                //optional: scroll to bottom and back up, to trigger image lazy loading
-                $this->browser->driver->executeScript('window.scrollTo(0, ' . $currentSize->getHeight() . ');');
-                $this->browser->pause(1000); //wait a sec
-                $this->browser->driver->executeScript('window.scrollTo(0, 0);'); //scroll back to top of the page
-
-                //set window to full height
-                $size = new WebDriverDimension(1920, $currentSize->getHeight()); //make browser full height for complete screenshot
-                $this->browser->driver->manage()->window()->setSize($size);
-            }
-
-            $this->browser->pause(3000); //wait for 3s to give everything time to finish loading - probably better to actually check
-
-            $image = $this->browser->driver->TakeScreenshot(); //$image is now the image data in PNG format
-
-            //Save the image
+            // Save the image
             Storage::disk('local')->put($this->saveDirectory . '/screenshots/' . $filename, $image);
 
             return file_exists($filePath);
@@ -91,5 +79,24 @@ class BrowserScreenShotService
 
             return false;
         }
+    }
+
+    protected function getScreenHeight(): int
+    {
+        $dims = $this->browser->script([
+            'let body = document.body;
+                let html = document.documentElement;
+                let totalHeight = Math.max(
+                    body.scrollHeight,
+                    body.offsetHeight,
+                    html.clientHeight,
+                    html.scrollHeight,
+                    html.offsetHeight
+                );
+
+                return {height: totalHeight};'
+        ]);
+
+        return current($dims)['height'];
     }
 }

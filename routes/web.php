@@ -1,9 +1,12 @@
 <?php
 
+use App\Events\WebEntityProcessed;
 use App\Facades\Curl;
 use App\Facades\Database;
 use App\Models\WebArchiveTest;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,6 +20,23 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/dev', function () {
+//    $directories = Storage::allDirectories('difficultdialogues');
+//    collect($directories)->each(function ($dir) {
+//        !d(Storage::disk('local')->files($dir));
+//    });
+    $tree = collect();
+    $paths = collect();
+    $root = Storage::path('difficultdialogues');
+    collect(File::allFiles($root))->each(function ($file) use (&$tree, &$paths) {
+        $path = $file->getRelativePath() ?: '/';
+        $paths->push($path);
+        if (! $tree->has($path)) {
+            $tree->put($path, collect());
+        }
+        $tree->get($path)->push($file);
+    });
+
+    !d($paths->unique()->toArray());
     // Do what thou wilt
 });
 

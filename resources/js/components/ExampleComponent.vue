@@ -22,22 +22,14 @@
                 message: 'Hullo'
             }
         },
-        watch: {
-            message: {
-                deep: true,
-                handler: function (tests) {
-                    window.Echo.private('new-entity')
-                        .listen('WebEntityProcessed', (e) => {
-                            alert('got it');
-                        });
-                }
-            }
+        created() {
+            window.Echo.channel('new-entity')
+                .listen('WebEntityProcessed', (e) => {
+                    console.log('got it');
+                });
         },
         mounted() {
-            this.$echo.private('new-entity').listen('WebEntityProcessed', (payload) => {
-                console.log(payload);
-            });
-            console.log('Component mounted.')
+             console.log('Component mounted.');
         },
     }
 </script>

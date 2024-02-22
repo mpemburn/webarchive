@@ -9,17 +9,24 @@ use Illuminate\Support\Facades\Storage;
 class DownloadService
 {
     public const VALID_FILE_EXTENSIONS = [
+        '3g2',
+        '3gp',
         'avchd',
+        'avi',
         'avi',
         'bin',
         'doc',
         'docx',
         'flv',
         'gif',
-        'jpg',
         'jpeg',
+        'jpg',
+        'key',
+        'm4a',
         'm4p',
         'm4v',
+        'mid',
+        'midi',
         'mov',
         'mp2',
         'mp3',
@@ -28,9 +35,13 @@ class DownloadService
         'mpeg',
         'mpg',
         'mpv',
+        'odt',
         'ogg',
+        'ogv',
         'pdf',
         'png',
+        'pps',
+        'ppsx',
         'ppt',
         'pptx',
         'pub',
@@ -42,6 +53,7 @@ class DownloadService
         'wmv',
         'xls',
         'xlsx',
+        'zip',
     ];
 
     protected string $saveDirectory;
